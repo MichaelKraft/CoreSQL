@@ -1,4 +1,10 @@
 <?php
+	require_once('classes/coresql_configuration.php');
+	require_once('classes/coresql_table.php');
+	require_once('classes/coresql_column.php');
+	require_once('classes/coresql_predicate.php');
+	require_once('classes/coresql_sort.php');
+
 	class CoreSQL {
 		private $connection;
 		private $resultCache;
@@ -65,7 +71,7 @@
 			}
 
 			if($found) {
-
+				
 			} else {
 				trigger_error("Requested table $table_name not found");
 				exit();
@@ -127,113 +133,4 @@
 			$output = (mysqli_fetch_assoc($results));
 		    return $output;
 		}
-	}
-
-	class CSQL_Table {
-		public $name;
-		public $is_defined;
-		public $columns;
-
-		public function __construct($name,$connection) {
-			// test if the table exists
-
-			$result = mysqli_query($connection, "SHOW TABLES LIKE '$name'");
-
-			$this->name = $name;
-			$this->is_defined = ($result->num_rows == 1);
-		}
-
-		public function initialize($connection) {
-			$query = "CREATE TABLE `$this->name`(" . PHP_EOL;
-			$idcolumn = '';
-			foreach ($this->columns as $column) {
-				if(get_class($column) != 'CSQL_Table_Column') {
-					trigger_error("Wrong type for table column, please use CSQL_Table_Column.");
-				exit();
-				}
-				$null = ' NOT NULL';
-
-				if($column->allow_null == true) {
-					$null = '';
-				}
-				if($column->id) {
-					$idcolumn = $column;
-					$null = ' NOT NULL AUTO_INCREMENT';
-				}
-				$query = $query . "$column->name $column->type $column->size $null," . PHP_EOL;
-			}
-			if($idcolumn == '') {
-				$query = $query . "ID INT NOT NULL AUTO_INCREMENT," . PHP_EOL . "PRIMARY KEY (ID)" . PHP_EOL;
-			} else {
-				$query = $query . "PRIMARY KEY ($idcolumn->name)" . PHP_EOL;
-			}
-			$query = $query . ');';
-			
-			mysqli_query($connection, $query);
-			if(mysqli_error($connection))
-			{
-				trigger_error(mysqli_error($connection));
-				exit();
-			}
-		}
-	}
-
-	class CSQL_Table_Column	{
-		public $name;
-		public $type;
-		public $id;
-		public $allow_null;
-		public $size;
-
-		public function __construct($name,$type,$size = 0,$id = false,$allow_null = true)
-		{
-			$test = strtolower($type);
-			if($test != 'int' && $test != 'text' && $test != 'varchar' && $test != 'date') {
-				trigger_error('Invalid column type specified');
-				exit();
-			}
-
-			$this->name = $name;
-			$this->type = $type;
-			$this->id = $id;
-			$this->allow_null = $allow_null;
-
-			if($size == 0)
-			{
-				$this->size = '';
-			}
-			else
-			{
-				$this->size = "($size)";
-			}
-		}
-	}
-
-	class CSQL_Predicate {
-		public $column;
-		public $search;
-		public $operator;
-
-		public function __construct($column,$operator,$search) {
-			$this->column = $column;
-			$this->search = $search;
-			$this->operator = $operator;
-		}
-	}
-
-	class CSQL_Sort {
-		public $column;
-		public $ascending;
-
-		public function __construct($column,$ascending) {
-			$this->ascending = $ascending;
-			$this->column = $column;
-		}
-	}
-
-	class CoreSQL_Configuration	{
-		public $hostname;
-		public $username;
-		public $password;
-		public $database;
 	}
