@@ -1,4 +1,5 @@
 <?php
+	// fetch components
 	require_once('classes/coresql_configuration.php');
 	require_once('classes/coresql_table.php');
 	require_once('classes/coresql_column.php');
